@@ -2,7 +2,7 @@ package org.example.models
 
 import java.math.BigDecimal
 
-data class SummarizerOperations(
+data class Summarizer(
     val weightedAveragePrice: BigDecimal,
     val quantity: BigDecimal,
     val tax: List<Tax>,

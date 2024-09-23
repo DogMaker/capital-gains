@@ -1,0 +1,63 @@
+package org.example.services
+
+import org.example.calculations.*
+import org.example.helpers.setScaleDown
+import org.example.models.Operation
+import org.example.models.Summarizer
+import org.example.models.Tax
+import java.math.BigDecimal.ZERO
+import java.math.BigDecimal
+
+
+fun calculateTax(operations: List<Operation>): List<Tax> {
+
+    val resp = operations.fold(
+        Summarizer(
+            weightedAveragePrice = ZERO,
+            quantity = ZERO,
+            tax = emptyList(),
+            loss = ZERO
+        )
+    ) { summarizer, operation ->
+
+        when (operation.operation) {
+            "buy" -> {
+                val currentQuantityStocks = summarizer.quantity + operation.quantity
+
+                val newWeightedAveragePrice = calculateWeightedAveragePrice(
+                    summarizer,
+                    operation,
+                    currentQuantityStocks
+                )
+
+                summarizer.copy(
+                    weightedAveragePrice = newWeightedAveragePrice,
+                    quantity = currentQuantityStocks,
+                    tax = summarizer.tax + Tax(tax = BigDecimal(0.00).setScaleDown())
+                )
+            }
+            "sell" -> {
+                val currentQuantityStocks = summarizer.quantity - operation.quantity
+                val totalSellOperation = operation.unitCost * operation.quantity
+
+                val gains = calculateGains(operation.unitCost, summarizer.weightedAveragePrice, operation.quantity)
+                val loss = calculateLoss(operation.unitCost, summarizer.weightedAveragePrice, operation.quantity, summarizer.loss)
+
+                val tax = when{
+                    isThereLoss(operation.unitCost, summarizer.weightedAveragePrice) -> BigDecimal(0.00)
+                    isTaxable(totalSellOperation) -> calculateTax(summarizer, gains)
+                    else -> BigDecimal(0.00)
+                }
+
+                summarizer.copy(
+                    quantity = currentQuantityStocks,
+                    tax = summarizer.tax + Tax(tax = tax.setScaleDown()),
+                    loss =  loss
+                )
+            }
+            else -> summarizer
+        }
+    }
+
+    return resp.tax
+}
