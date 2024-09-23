@@ -11,7 +11,11 @@ docker build -t capital-gains .
 #### Run the application
 
 ```bash
-docker run -i --rm capital-gains < docs/input.txt
+docker run -i --rm capital-gains < files/operations.txt
+```
+##### Windows
+```bash
+Get-Content files/operations.txt | docker run -i --rm capital-gains
 ```
 
 or

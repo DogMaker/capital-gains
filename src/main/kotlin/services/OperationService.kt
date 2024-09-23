@@ -6,7 +6,6 @@ import org.example.models.Operation
 import org.example.models.Summarizer
 import org.example.models.Tax
 import java.math.BigDecimal.ZERO
-import java.math.BigDecimal
 
 
 fun calculateTax(operations: List<Operation>): List<Tax> {
@@ -33,7 +32,7 @@ fun calculateTax(operations: List<Operation>): List<Tax> {
                 summarizer.copy(
                     weightedAveragePrice = newWeightedAveragePrice,
                     quantity = currentQuantityStocks,
-                    tax = summarizer.tax + Tax(tax = BigDecimal(0.00).setScaleDown())
+                    tax = summarizer.tax + Tax(tax = ZERO.setScaleDown())
                 )
             }
             "sell" -> {
@@ -41,12 +40,12 @@ fun calculateTax(operations: List<Operation>): List<Tax> {
                 val totalSellOperation = operation.unitCost * operation.quantity
 
                 val gains = calculateGains(operation.unitCost, summarizer.weightedAveragePrice, operation.quantity)
-                val loss = calculateLoss(operation.unitCost, summarizer.weightedAveragePrice, operation.quantity, summarizer.loss)
+                val loss = accumulatedLoss(operation, summarizer)
 
                 val tax = when{
-                    isThereLoss(operation.unitCost, summarizer.weightedAveragePrice) -> BigDecimal(0.00)
+                    isThereLoss(operation.unitCost, summarizer.weightedAveragePrice) -> ZERO
                     isTaxable(totalSellOperation) -> calculateTax(summarizer, gains)
-                    else -> BigDecimal(0.00)
+                    else -> ZERO
                 }
 
                 summarizer.copy(

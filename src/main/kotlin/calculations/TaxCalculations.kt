@@ -21,12 +21,10 @@ val calculateGains: (BigDecimal, BigDecimal, BigDecimal) -> BigDecimal = {
     }
 }
 
-fun isRemainingLoss(): Boolean {
-return true
-}
-
-val calculateLoss: (BigDecimal, BigDecimal, BigDecimal, BigDecimal) -> BigDecimal = { unitCost, weightedAverage, quantitySold, lossAccumulate ->
-    (((unitCost - weightedAverage) * quantitySold)-lossAccumulate).let { result -> result.takeIf { it < ZERO } ?: ZERO }.abs()
+val accumulatedLoss: (Operation, Summarizer) -> BigDecimal = { operation, summarizer ->
+    ((operation.unitCost - summarizer.weightedAveragePrice) * operation.quantity).minus(summarizer.loss).let {
+            result -> result.takeIf { it < ZERO } ?: ZERO
+    }.abs()
 }
 
 val isThereLoss: (BigDecimal, BigDecimal) -> Boolean = { unitCost, weightedAverage ->
